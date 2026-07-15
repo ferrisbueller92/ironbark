@@ -95,6 +95,43 @@
   .homebtn svg path{ stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:square; }
   .sess-hero .homebtn{ background:rgba(23,26,22,.32); color:#F4F3EC; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); top:calc(38px + var(--sat)); }
 
+  /* tab tour */
+  .tour{ position:absolute; inset:0; z-index:70; display:none; }
+  .tour.on{ display:block; }
+  .tspot{ position:absolute; width:62px; height:62px; border-radius:50%; box-shadow:0 0 0 9999px rgba(10,13,10,.85);
+    transition:left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1); pointer-events:none; }
+  .tspot::after{ content:""; position:absolute; inset:-3px; border-radius:50%; box-shadow:0 0 0 1.5px rgba(143,184,154,.7), 0 0 22px rgba(143,184,154,.4); }
+  .tourcard{ position:absolute; left:26px; right:26px; bottom:calc(126px + var(--sab)); color:#F4F3EC; }
+  .tourcard .tk2{ font-size:9.5px; letter-spacing:.26em; text-transform:uppercase; font-weight:750; color:#8FB89A; }
+  .tourcard .disp{ font-size:27px; color:#F4F3EC; margin-top:7px; }
+  .tourcard .td{ font-size:13px; line-height:1.6; opacity:.72; margin-top:8px; max-width:280px; }
+  .tourcard.swap{ animation:afade .45s ease both; }
+  .tourdots{ display:flex; gap:6px; margin-top:16px; }
+  .tourdots i{ width:5px; height:5px; border-radius:50%; background:rgba(244,243,236,.28); }
+  .tourdots i.on{ width:16px; border-radius:999px; background:#8FB89A; }
+  .tourbtns{ position:absolute; left:26px; right:26px; bottom:calc(84px + var(--sab)); display:flex; gap:10px; align-items:center; justify-content:space-between; }
+  .tskip{ border:0; background:none; cursor:pointer; font-family:inherit; font-size:11.5px; font-weight:650; color:rgba(244,243,236,.5); letter-spacing:.04em; padding:10px 4px; }
+  .tnext{ border:0; cursor:pointer; font-family:inherit; background:linear-gradient(180deg,#41604C,#2C4437); color:#F2F1EA; border-radius:999px; padding:12px 26px; font-weight:750; font-size:13px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 8px 20px rgba(0,0,0,.4); }
+
+  /* membership offer */
+  .offer{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:0 28px;
+    background:radial-gradient(circle at 50% 22%, rgba(51,81,62,.4), rgba(51,81,62,0) 60%), #171A16; color:#F4F3EC; }
+  .offer .ok{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; font-weight:750; color:#8FB89A; }
+  .offer .disp{ font-size:31px; color:#F4F3EC; margin-top:10px; }
+  .offer .osub{ font-size:13px; line-height:1.6; opacity:.7; margin-top:8px; }
+  .otable{ margin-top:22px; border-radius:18px; overflow:hidden; background:rgba(244,243,236,.05); box-shadow:inset 0 0 0 .5px rgba(244,243,236,.12); }
+  .orow{ display:grid; grid-template-columns:1fr 56px 72px; align-items:center; padding:11px 16px; font-size:12px; border-bottom:1px solid rgba(244,243,236,.07); }
+  .orow:last-child{ border-bottom:0; }
+  .orow.head{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; font-weight:750; opacity:.55; }
+  .orow span{ text-align:center; font-weight:700; }
+  .orow .yes{ color:#A8CBB2; }
+  .orow .no{ opacity:.3; }
+  .oprice{ font-size:11.5px; opacity:.65; margin-top:16px; line-height:1.6; }
+  .offer .cta{ margin-top:14px; }
+  .olater{ display:block; margin:12px auto 0; border:0; background:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:650; color:rgba(244,243,236,.5); padding:8px; }
+  .onote{ text-align:center; font-size:9px; opacity:.35; margin-top:12px; }
+
   /* rack */
   .rackwrap{ flex:1; padding:8px 20px 0; display:flex; flex-direction:column; justify-content:space-evenly; gap:2px; overflow:hidden; }
   .rackchip{ align-self:flex-end; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--s-acc); background:rgba(51,81,62,.09); border-radius:999px; padding:5px 10px; margin:2px 2px 4px 0; }
@@ -432,8 +469,8 @@
       <div class="rk">Ironbark</div>
       <div class="disp" id="rvname">Good to have you.</div>
       <div class="rsub" id="rvsub"></div>
-      <div class="rbody">Now let&#8217;s set up this morning&#8217;s move &#8212; what you&#8217;ve got, what needs the work, how long you&#8217;ve got.</div>
-      <button class="cta" onclick="show('onb1')">Set up today&#8217;s session</button>
+      <div class="rbody">Your mornings live in here. Let&#8217;s show you around &#8212; then build your first session whenever you&#8217;re ready.</div>
+      <button class="cta" onclick="finishProfile()">Step inside</button>
     </div>
   </div>
 
@@ -465,7 +502,7 @@
       <div class="bwrow" style="background:rgba(51,81,62,.07);"><b id="rackpool" style="color:var(--s-acc);">17</b>&nbsp;movements unlocked by this rack.</div>
     </div>
     <div class="foot">
-      <button class="cta" onclick="show('onb2')">Continue</button>
+      <button class="cta" onclick="rackNext()">Continue</button>
       <div class="micro">Change anytime in You → Rack. Sessions adapt.</div>
     </div>
   </div>
@@ -731,6 +768,42 @@
     </div>
   </div>
 
+  <!-- MEMBERSHIP OFFER (after first session) -->
+  <div class="scr" id="offer">
+    <div class="offer">
+      <div class="ok">Session one, done</div>
+      <div class="disp">Keep the mornings coming.</div>
+      <div class="osub">Tomorrow is already adapting to what you logged. Membership keeps the engine learning, every morning.</div>
+      <div class="otable">
+        <div class="orow head"><div></div><span>Free</span><span>Member</span></div>
+        <div class="orow"><div>Adaptive daily sessions</div><span class="yes">7 days</span><span class="yes">Always</span></div>
+        <div class="orow"><div>Filmed movement library</div><span class="yes">&#10003;</span><span class="yes">&#10003;</span></div>
+        <div class="orow"><div>Load map, volume &amp; PRs</div><span class="yes">&#10003;</span><span class="yes">&#10003;</span></div>
+        <div class="orow"><div>New movements &amp; flows</div><span class="no">&#8212;</span><span class="yes">&#10003;</span></div>
+        <div class="orow"><div>Long-run progression</div><span class="no">&#8212;</span><span class="yes">&#10003;</span></div>
+      </div>
+      <div class="oprice">7 days free, then <b>A$99.99/year</b> &#183; or A$19.99/month. Cancel any time, keep your history forever.</div>
+      <button class="cta" onclick="offerChoose(true)">Start 7 days free</button>
+      <button class="olater" onclick="offerChoose(false)">Maybe later</button>
+      <div class="onote">Prototype &#8212; nothing is charged, everything stays unlocked.</div>
+    </div>
+  </div>
+
+  <!-- TAB TOUR -->
+  <div class="tour" id="tour">
+    <div class="tspot" id="tspot"></div>
+    <div class="tourcard" id="tourcard">
+      <div class="tk2">A quick look around</div>
+      <div class="disp" id="ttitle">Today</div>
+      <div class="td" id="tdesc"></div>
+      <div class="tourdots" id="tourdots"></div>
+    </div>
+    <div class="tourbtns">
+      <button class="tskip" onclick="endTour()">Skip</button>
+      <button class="tnext" id="tnext" onclick="tourNext()">Next</button>
+    </div>
+  </div>
+
   <!-- TAB BAR -->
   <div class="tabbar" id="tabbar" style="display:none;">
     <button class="tab on" data-tab="home" onclick="tabTo('home')"><svg width="21" height="21" viewBox="0 0 22 22"><path d="M4 15.5 h14"/><path d="M6.5 15.5 a4.5 4.5 0 0 1 9 0"/><path d="M11 5.5 v2.5"/></svg>Today</button>
@@ -746,10 +819,11 @@
 <script>
 // ================= PERSISTENT STATE =================
 var KEY = 'ironbark_v01';
-var S = { onboarded:false, profile:{ name:'', goals:[], level:'' }, kit:{kb:true, db:true, bands:true, bench:false}, kbw:[12,16,24], lastTime:20,
-          sessions:[], flows:[], prs:{} };
+var S = { onboarded:false, profile:{ name:'', goals:[], level:'' }, rackDone:false, toured:false, memberSeen:false, member:false,
+          kit:{kb:true, db:true, bands:true, bench:false}, kbw:[12,16,24], lastTime:20, sessions:[], flows:[], prs:{} };
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-function load(){ try{ var raw = localStorage.getItem(KEY); if(raw){ var p = JSON.parse(raw); for(var k in S) if(p[k] !== undefined) S[k] = p[k]; } }catch(e){} }
+function load(){ try{ var raw = localStorage.getItem(KEY); if(raw){ var p = JSON.parse(raw); for(var k in S) if(p[k] !== undefined) S[k] = p[k];
+  if(S.sessions.length && p.rackDone === undefined){ S.rackDone = true; S.toured = true; S.memberSeen = true; } } }catch(e){} }
 
 var run = { muscles:{}, time:20, side:'front' };
 
@@ -941,6 +1015,54 @@ document.querySelectorAll('.lvl').forEach(function(l){
     setTimeout(function(){ renderReveal(); show('onbreveal'); }, 320);
   });
 });
+function finishProfile(){
+  S.onboarded = true; save();
+  show('home');
+  if(!S.toured) setTimeout(startTour, 700);
+}
+function rackNext(){ S.rackDone = true; save(); show('onb2'); }
+function offerChoose(joined){ S.memberSeen = true; S.member = joined; save(); show('home'); }
+
+// ================= TAB TOUR =================
+var TOURSTEPS = [
+  { tab:0, title:'Today', d:'Your morning, ready when you are \u2014 the week strip, and a session adapted overnight from what you log.' },
+  { tab:1, title:'Train', d:'Build a session in under a minute \u2014 your rack, the muscles you pick, the minutes you\u2019ve got.' },
+  { tab:2, title:'Flows', d:'Wake-up mobility for the spine and hips. Before coffee.' },
+  { tab:3, title:'Progress', d:'The load map, weekly volume and personal bests \u2014 every number from what you actually did.' },
+  { tab:4, title:'You', d:'Your rack, your story so far, your settings. Change anything, any time.' }
+];
+var tourI = 0;
+function startTour(){
+  tourI = 0;
+  $('tour').classList.add('on');
+  var dots = $('tourdots'); dots.innerHTML = '';
+  TOURSTEPS.forEach(function(){ dots.appendChild(document.createElement('i')); });
+  tourRender();
+}
+function tourRender(){
+  var s = TOURSTEPS[tourI];
+  var tabs = document.querySelectorAll('.tab');
+  var r = tabs[s.tab].getBoundingClientRect();
+  var appR = $('app').getBoundingClientRect();
+  var spot = $('tspot');
+  spot.style.left = (r.left - appR.left + r.width/2 - 31) + 'px';
+  spot.style.top = (r.top - appR.top + r.height/2 - 31) + 'px';
+  var card = $('tourcard');
+  card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
+  $('ttitle').textContent = s.title;
+  $('tdesc').textContent = s.d;
+  document.querySelectorAll('#tourdots i').forEach(function(d,i){ d.classList.toggle('on', i === tourI); });
+  $('tnext').textContent = tourI === TOURSTEPS.length-1 ? 'Start exploring' : 'Next';
+}
+function tourNext(){
+  if(tourI >= TOURSTEPS.length-1){ endTour(); return; }
+  tourI++; tourRender();
+}
+function endTour(){
+  $('tour').classList.remove('on');
+  S.toured = true; save();
+}
+
 function renderReveal(){
   $('rvname').textContent = 'Good to have you, ' + (S.profile.name || 'friend') + '.';
   var gs = S.profile.goals.map(function(g,i){ var s = GOALLBL[g]; return i ? s.toLowerCase() : s; }).join(' and ');
@@ -968,6 +1090,7 @@ function show(id){
 function tabTo(id){ show(id); }
 function startTraining(){
   probeClips();
+  if(!S.rackDone){ show('onb1'); return; }
   // suggest least-loaded muscles from history
   run.muscles = {};
   document.querySelectorAll('.mg, .ml').forEach(function(el){ el.classList.remove('on'); });
@@ -1344,7 +1467,7 @@ function showComplete(){
     learn.appendChild(el);
   });
 }
-function finishToHome(){ show('home'); }
+function finishToHome(){ if(S.sessions.length === 1 && !S.memberSeen){ show('offer'); return; } show('home'); }
 function shadeMaps(sel, by, legendId, animate){
   var max = 1;
   MUSCLES.forEach(function(m){ if((by[m]||0) > max) max = by[m]; });
