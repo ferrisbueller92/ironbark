@@ -50,6 +50,9 @@
   .arrive{ position:absolute; inset:0; }
   .arrive .img{ position:absolute; inset:0; background-image:url('cadence-assets/mv-goblet-squat.jpg'); background-size:cover; background-position:50% 18%;
     filter:saturate(.82) contrast(1.08) brightness(.9); animation:kb 26s ease-in-out infinite alternate; }
+  .arrive .avid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    filter:saturate(.82) contrast(1.08) brightness(.88); transition:opacity 1.4s ease; }
+  .arrive .avid.hide{ opacity:0; }
   .arrive .grade{ position:absolute; inset:0; background:linear-gradient(178deg, rgba(63,94,74,.32), rgba(23,26,22,.4)); mix-blend-mode:soft-light; }
   .arrive .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,13,10,.22) 0%, rgba(10,13,10,.02) 30%, rgba(9,12,9,.2) 58%, rgba(8,11,8,.92) 96%); }
   .acontent{ position:absolute; left:0; right:0; bottom:0; padding:0 26px calc(34px + var(--sab)); color:#F4F3EC; z-index:2; animation:afade 1.6s ease both .3s; }
@@ -355,7 +358,10 @@
   <!-- ARRIVAL -->
   <div class="scr" id="arrive">
     <div class="arrive">
-      <div class="img"></div><div class="grade"></div><div class="scrim"></div>
+      <div class="img"></div>
+      <video class="avid" id="av1" muted playsinline preload="auto"></video>
+      <video class="avid hide" id="av2" muted playsinline preload="auto"></video>
+      <div class="grade"></div><div class="scrim"></div>
       <div class="acontent">
         <div class="awordmark">IRON<span>BARK</span></div>
         <div class="abrand">Move first.</div>
@@ -870,6 +876,35 @@ function tickClock(){
 }
 setInterval(tickClock, 20000);
 
+// ================= ARRIVAL CAROUSEL =================
+var ARRIVE_CLIPS = ['mv-goblet-squat.mp4','mv-world-s-greatest-stretch.mp4','mv-suitcase-carry.mp4','mv-reverse-lunge.mp4','mv-kettlebell-halo.mp4'].map(function(f){ return 'cadence-assets/' + f; });
+var AV = { i:0, front:1, timer:null };
+function arriveStart(){
+  arriveStop();
+  var v1 = $('av1');
+  v1.src = ARRIVE_CLIPS[0]; v1.classList.remove('hide');
+  $('av2').classList.add('hide');
+  AV.i = 0; AV.front = 1;
+  v1.play().catch(function(){});
+  AV.timer = setInterval(arriveNext, 4600);
+}
+function arriveNext(){
+  AV.i = (AV.i + 1) % ARRIVE_CLIPS.length;
+  var inV = $(AV.front === 1 ? 'av2' : 'av1');
+  var outV = $(AV.front === 1 ? 'av1' : 'av2');
+  inV.src = ARRIVE_CLIPS[AV.i];
+  inV.play().then(function(){
+    inV.classList.remove('hide');
+    outV.classList.add('hide');
+    AV.front = AV.front === 1 ? 2 : 1;
+    setTimeout(function(){ outV.pause(); }, 1500);
+  }).catch(function(){});
+}
+function arriveStop(){
+  clearInterval(AV.timer); AV.timer = null;
+  ['av1','av2'].forEach(function(id){ var v = $(id); if(v) v.pause(); });
+}
+
 // ================= PROFILE ONBOARDING =================
 var GOALLBL = { move:'Moving better', strong:'Getting stronger', habit:'Building the habit', recover:'Recovering well' };
 var LVLLBL = { new:'new to this', returning:'trained before', conditioned:'well-conditioned' };
@@ -918,6 +953,7 @@ function show(id){
   document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on'); });
   $(id).classList.add('on');
   document.querySelectorAll('.homebtn').forEach(function(b){ b.style.display = S.onboarded ? 'flex' : 'none'; });
+  if(id === 'arrive') arriveStart(); else arriveStop();
   var tb = $('tabbar');
   if(TABS[id] && S.onboarded){
     tb.style.display = 'flex';
