@@ -51,8 +51,10 @@
   .arrive .img{ position:absolute; inset:0; background-image:url('cadence-assets/mv-goblet-squat.jpg'); background-size:cover; background-position:50% 18%;
     filter:saturate(.82) contrast(1.08) brightness(.9); animation:kb 26s ease-in-out infinite alternate; }
   .arrive .avid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-    filter:saturate(.82) contrast(1.08) brightness(.88); transition:opacity 1.4s ease; }
+    filter:saturate(.82) contrast(1.08) brightness(.88); transition:opacity 1.2s ease; transform:scale(1.04); }
   .arrive .avid.hide{ opacity:0; }
+  .arrive .avid.zooming{ animation:avzoom 6.5s linear both; }
+  @keyframes avzoom{ from{ transform:scale(1.04);} to{ transform:scale(1.1);} }
   .arrive .grade{ position:absolute; inset:0; background:linear-gradient(178deg, rgba(63,94,74,.32), rgba(23,26,22,.4)); mix-blend-mode:soft-light; }
   .arrive .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,13,10,.22) 0%, rgba(10,13,10,.02) 30%, rgba(9,12,9,.2) 58%, rgba(8,11,8,.92) 96%); }
   .acontent{ position:absolute; left:0; right:0; bottom:0; padding:0 26px calc(34px + var(--sab)); color:#F4F3EC; z-index:2; animation:afade 1.6s ease both .3s; }
@@ -762,6 +764,7 @@
         <div class="pr"><span>Coach voice</span><span class="prdate">with the content engine</span></div>
       </div>
       <div class="youcard" style="background:none; box-shadow:none; padding:4px 0;">
+        <button class="dangerbtn" style="color:var(--s-acc); box-shadow:inset 0 0 0 1.2px rgba(51,81,62,.35); margin-bottom:10px;" onclick="signOut()">Sign out &#8212; replay the welcome</button>
         <button class="dangerbtn" id="resetbtn" onclick="armReset()">Erase all training data</button>
       </div>
       <div class="empty" style="text-align:center;">IRONBARK v0.1 · Move first.</div>
@@ -951,32 +954,44 @@ function tickClock(){
 setInterval(tickClock, 20000);
 
 // ================= ARRIVAL CAROUSEL =================
-var ARRIVE_CLIPS = ['mv-goblet-squat.mp4','mv-world-s-greatest-stretch.mp4','mv-suitcase-carry.mp4','mv-reverse-lunge.mp4','mv-kettlebell-halo.mp4'].map(function(f){ return 'cadence-assets/' + f; });
+// Calm, in-place movements only (locomotion clips cut badly as ambience).
+// Clips are ~5.04s @0.9x = ~5.6s wall. Fade starts at 4.2s, lasts 1.2s -> both
+// videos are genuinely playing for the whole crossfade; nothing ever freezes.
+var ARRIVE_CLIPS = ['mv-goblet-squat.mp4','mv-world-s-greatest-stretch.mp4','mv-kettlebell-halo.mp4','mv-glute-bridge.mp4','mv-plank.mp4'].map(function(f){ return 'cadence-assets/' + f; });
 var AV = { i:0, front:1, timer:null };
+function avEl(front){ return $(front ? 'av1' : 'av2'); }
+function avPrime(v, src){ v.src = src; v.load(); }
 function arriveStart(){
   arriveStop();
-  var v1 = $('av1');
-  v1.src = ARRIVE_CLIPS[0]; v1.classList.remove('hide');
-  $('av2').classList.add('hide');
   AV.i = 0; AV.front = 1;
-  v1.play().catch(function(){});
-  AV.timer = setInterval(arriveNext, 4600);
+  var v1 = $('av1'), v2 = $('av2');
+  v1.playbackRate = 0.9; v2.playbackRate = 0.9;
+  v1.classList.remove('hide'); v2.classList.add('hide');
+  avPrime(v1, ARRIVE_CLIPS[0]);
+  v1.currentTime = 0;
+  v1.play().then(function(){ v1.classList.add('zooming'); }).catch(function(){});
+  avPrime(v2, ARRIVE_CLIPS[1]);          // buffer the next clip ~4s ahead
+  AV.timer = setInterval(arriveNext, 4200);
 }
 function arriveNext(){
-  AV.i = (AV.i + 1) % ARRIVE_CLIPS.length;
-  var inV = $(AV.front === 1 ? 'av2' : 'av1');
-  var outV = $(AV.front === 1 ? 'av1' : 'av2');
-  inV.src = ARRIVE_CLIPS[AV.i];
+  var outV = avEl(AV.front === 1), inV = avEl(AV.front !== 1);
+  inV.playbackRate = 0.9;
+  inV.currentTime = 0;
   inV.play().then(function(){
     inV.classList.remove('hide');
+    inV.classList.remove('zooming'); void inV.offsetWidth; inV.classList.add('zooming');
     outV.classList.add('hide');
     AV.front = AV.front === 1 ? 2 : 1;
-    setTimeout(function(){ outV.pause(); }, 1500);
+    setTimeout(function(){
+      outV.pause(); outV.classList.remove('zooming');
+      AV.i = (AV.i + 1) % ARRIVE_CLIPS.length;
+      avPrime(outV, ARRIVE_CLIPS[(AV.i + 1) % ARRIVE_CLIPS.length]);   // pre-buffer clip after next
+    }, 1300);
   }).catch(function(){});
 }
 function arriveStop(){
   clearInterval(AV.timer); AV.timer = null;
-  ['av1','av2'].forEach(function(id){ var v = $(id); if(v) v.pause(); });
+  ['av1','av2'].forEach(function(id){ var v = $(id); if(v){ v.pause(); v.classList.remove('zooming'); } });
 }
 
 // ================= PROFILE ONBOARDING =================
@@ -1679,6 +1694,16 @@ function renderYou(){
   $('yousub').textContent = pf.length ? pf.join(' \u00b7 ') : (S.sessions.length ? 'Session ' + (S.sessions.length+1) + ' is waiting.' : 'Training since day one.');
   $('resetbtn').textContent = 'Erase all training data';
   resetArmed = false;
+}
+function signOut(){
+  // Non-destructive: history, PRs and rack survive. Profile + onboarding replay from the top.
+  S.onboarded = false; S.toured = false; S.rackDone = false;
+  S.profile = { name:'', goals:[], level:'' };
+  save();
+  $('nameinput').value = ''; $('whocta').disabled = true;
+  document.querySelectorAll('.bub, .lvl').forEach(function(el){ el.classList.remove('on'); });
+  $('goalcta').disabled = true;
+  show('arrive');
 }
 function armReset(){
   if(!resetArmed){ resetArmed = true; $('resetbtn').textContent = 'Tap again to erase everything'; return; }
